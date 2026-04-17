@@ -1,0 +1,70 @@
+html{
+    overflow-x: hidden;
+}
+html[dir="rtl"] .G2C-personal-area-wrapper h2{
+    text-align: right;
+}
+#subscriptions td, #subscriptions tr th{
+    text-align: center;
+}
+#subscriptions td {
+    vertical-align: middle;
+    padding: .75rem .2rem;
+}
+#subscriptions h5 {
+    margin: 0;
+}
+#subscriptions .active,
+#subscriptions .cancelled,
+#subscriptions .failed,
+#subscriptions .expired{
+    border-bottom: 1px solid #eee;;
+}
+#subscriptions .active {
+    background-color: #d4edda;
+}
+#subscriptions .cancelled {
+    background-color: #fff3cd;
+}
+#subscriptions .failed {
+    background-color: #f8d7da;
+}
+#subscriptions .expired {
+    background-color: #cce5ff;
+}
+.cancel-btn{
+    width: 100%;
+    display: inline-block;
+    font-weight: 400;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    user-select: none;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: .25rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    color: #fff;
+    background-color: #dc3545;
+    border: 1px solid #dc3545;
+    cursor: pointer;
+}
+.cancel-btn:hover{
+    color: #fff;
+    text-decoration: none;
+    background-color: #c82333;;
+}
+#G2C-personal-area .homepage-slider-item{
+    height: auto;
+}
+@media (max-width: 950px){
+    .subscs-table-wrapper{
+        overflow-x: scroll;
+    }
+}
+@media (min-width: 768px){
+    .subscs-table-wrapper{
+        margin-bottom: 3.5rem;
+    }
+}

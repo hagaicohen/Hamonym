@@ -1,0 +1,15 @@
+html[dir="rtl"] .gforms_form_settings.gforms_form_settings th{
+    text-align: right;
+}
+#gaddon-setting-row-tranzila_notify_url td{
+    cursor: text;
+}
+.tranzila-notify-url{
+    width: 50%;
+}
+#gaddon-setting-row-max_payments{
+    display: none;
+}
+.G2C-subscription-actions{
+    margin-bottom: 1rem;
+}
