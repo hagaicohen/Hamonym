@@ -1,0 +1,266 @@
+<?php
+add_action('admin_footer', function() {
+    echo "<script>console.log('🔥 ADMIN FILE LOADED');</script>";
+});
+if ( ! defined( 'ABSPATH' ) ) exit;
+
+// =======================
+// 🔹 GRAVITY FIELDS
+// =======================
+
+function g2c_get_gravity_fields($form_id) {
+
+    if (!class_exists('GFAPI')) return [];
+
+    $form = GFAPI::get_form($form_id);
+
+    if (!$form || empty($form['fields'])) return [];
+
+    return $form['fields'];
+}
+
+// =======================
+// 🔹 SELECT (עם selected)
+// =======================
+
+function g2c_select($name, $form_id, $settings) {
+
+    $fields = g2c_get_gravity_fields($form_id);
+    $selected_value = $settings[$name] ?? '';
+    $selected_label = '';
+
+    foreach ($fields as $field) {
+        if ($field->id == $selected_value) {
+            $selected_label = $field->label . ' (ID: ' . $field->id . ')';
+        }
+    }
+
+    echo '<div class="g2c-dd">';
+
+    echo '<input type="hidden" name="g2c_settings[' . esc_attr($name) . ']" value="' . esc_attr($selected_value) . '" class="g2c-val">';
+
+    echo '<div class="g2c-display">' . esc_html($selected_label ?: 'בחר שדה...') . '</div>';
+
+    echo '<div class="g2c-options">';
+
+    foreach ($fields as $field) {
+        echo '<div class="g2c-option" data-val="' . esc_attr($field->id) . '">';
+        echo esc_html($field->label) . ' (ID: ' . $field->id . ')';
+        echo '</div>';
+    }
+
+    echo '</div>';
+    echo '</div>';
+}
+
+// =======================
+// 🔥 MENU
+// =======================
+
+add_filter('gform_form_settings_menu', function($menu_items) {
+
+    $menu_items['g2c'] = array(
+        'name'  => 'g2c',
+        'label' => 'Cardcom',
+        'icon'  => 'gform-icon--credit-card'
+    );
+
+    return $menu_items;
+
+});
+
+// =======================
+// 🔥 PAGE
+// =======================
+
+add_action('gform_form_settings_page_g2c', function() {
+
+$form_id = absint($_GET['id'] ?? 0);
+
+// שמירה
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['g2c_settings'])) {
+
+    $new_settings = $_POST['g2c_settings'];
+    update_option('g2c_settings_' . $form_id, $new_settings);
+
+    echo '<div class="updated"><p>נשמר ✔</p></div>';
+}
+
+// טעינה
+$settings = get_option('g2c_settings_' . $form_id, []);
+
+?>
+
+<h2 class="g2c-title">הגדרות Cardcom 💳</h2>
+<p class="g2c-sub">הגדרת חיבור ומיפוי שדות לתשלום מאובטח</p>
+
+<form method="post">
+<div class="g2c-panel">
+
+<!-- 🔑 חיבור -->
+<div class="g2c-section">
+<h4>פרטי חיבור</h4>
+
+<div class="g2c-field">
+<label>מספר מסוף</label>
+<input type="text" name="g2c_settings[g2c_terminal]"
+value="<?= esc_attr($settings['g2c_terminal'] ?? '') ?>">
+</div>
+
+<div class="g2c-field">
+<label>API User</label>
+<input type="text" name="g2c_settings[g2c_api_user]"
+value="<?= esc_attr($settings['g2c_api_user'] ?? '') ?>">
+</div>
+
+<div class="g2c-field">
+<label>API Password</label>
+<div class="g2c-password-wrap">
+    <input type="password" id="g2c_api_password"
+    name="g2c_settings[g2c_api_password]"
+    value="<?= esc_attr($settings['g2c_api_password'] ?? '') ?>">
+    <span class="dashicons dashicons-visibility g2c-eye"
+          onclick="togglePassword('g2c_api_password', this)"></span>
+</div>
+</div>
+
+</div>
+
+<!-- 👤 לקוח -->
+<div class="g2c-section">
+<h4>פרטי לקוח (מיפוי)</h4>
+
+<div class="g2c-field"><label>שם פרטי</label><?php g2c_select('first_name', $form_id, $settings); ?></div>
+<div class="g2c-field"><label>שם משפחה</label><?php g2c_select('last_name', $form_id, $settings); ?></div>
+<div class="g2c-field"><label>Comments</label><?php g2c_select('comments', $form_id, $settings); ?></div>
+<div class="g2c-field"><label>Campaign ID</label><?php g2c_select('campaign_id', $form_id, $settings); ?></div>
+<div class="g2c-field"><label>טלפון</label><?php g2c_select('phone', $form_id, $settings); ?></div>
+<div class="g2c-field"><label>אימייל</label><?php g2c_select('email', $form_id, $settings); ?></div>
+<div class="g2c-field"><label>כתובת</label><?php g2c_select('address', $form_id, $settings); ?></div>
+<div class="g2c-field"><label>עיר</label><?php g2c_select('city', $form_id, $settings); ?></div>
+<div class="g2c-field"><label>מיקוד</label><?php g2c_select('zip', $form_id, $settings); ?></div>
+
+</div>
+
+<!-- 💰 עסקה -->
+<div class="g2c-section">
+<h4>פרטי העסקה</h4>
+
+<div class="g2c-field">
+<label>סה"כ תשלום</label>
+<?php g2c_select('amount', $form_id, $settings); ?>
+</div>
+
+<div class="g2c-field">
+<label>תיאור מוצר</label>
+<input type="text" name="g2c_settings[g2c_product]"
+value="<?= esc_attr($settings['g2c_product'] ?? '') ?>">
+</div>
+
+</div>
+
+<!-- 📐 iframe -->
+<div class="g2c-section">
+<h4>חלון תשלום</h4>
+
+<div class="g2c-field">
+<label>רוחב</label>
+<input type="number" name="g2c_settings[g2c_iframe_width]"
+value="<?= esc_attr($settings['g2c_iframe_width'] ?? 600) ?>">
+</div>
+
+<div class="g2c-field">
+<label>גובה</label>
+<input type="number" name="g2c_settings[g2c_iframe_height]"
+value="<?= esc_attr($settings['g2c_iframe_height'] ?? 700) ?>">
+</div>
+
+</div>
+
+<button class="button button-primary">שמור</button>
+
+</div>
+</form>
+
+<script>
+function togglePassword(id, el) {
+    const input = document.getElementById(id);
+
+    if (input.type === "password") {
+        input.type = "text";
+        el.classList.remove('dashicons-visibility');
+        el.classList.add('dashicons-hidden');
+    } else {
+        input.type = "password";
+        el.classList.remove('dashicons-hidden');
+        el.classList.add('dashicons-visibility');
+    }
+}
+</script>
+
+<script>
+jQuery(function($){
+
+    $(document).on('click', '.g2c-display', function(){
+        $('.g2c-options').hide();
+        $(this).siblings('.g2c-options').toggle();
+    });
+
+    $(document).on('click', '.g2c-option', function(){
+        const val = $(this).data('val');
+        const text = $(this).text();
+        const box = $(this).closest('.g2c-dd');
+
+        box.find('.g2c-val').val(val);
+        box.find('.g2c-display').text(text);
+        box.find('.g2c-options').hide();
+    });
+
+    $(document).on('click', function(e){
+        if (!$(e.target).closest('.g2c-dd').length) {
+            $('.g2c-options').hide();
+        }
+    });
+
+});
+</script>
+
+<?php
+});
+
+// =======================
+// 🎨 CSS (בדיוק כמו שלך)
+// =======================
+
+add_action('admin_head', function () {
+?>
+<style>
+
+.g2c-title { font-size:22px;font-weight:700;margin-bottom:5px;}
+.g2c-sub { color:#666;margin-bottom:20px;}
+.g2c-panel { max-width:600px;margin-top:20px;}
+.g2c-section { background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;margin-bottom:20px;}
+.g2c-section h4 { margin-bottom:15px;}
+.g2c-field { display:flex;flex-direction:column;margin-bottom:15px;}
+.g2c-field label { margin-bottom:5px;font-weight:500;}
+.g2c-field input,.g2c-field select { width:100%;max-width:100%;height:38px;border-radius:8px;border:1px solid #ccc;padding:0 10px;box-sizing:border-box;}
+.g2c-field select { display:block;min-width:0;}
+@media (max-width:600px){
+.g2c-panel{max-width:100%;padding:0 10px;}
+.g2c-field input,.g2c-field select{width:100%;}
+}
+.g2c-field input:focus,.g2c-field select:focus{border-color:#2271b1;outline:none;}
+.g2c-password-wrap{position:relative;width:100%;}
+.g2c-password-wrap input{width:100%;padding-left:35px;box-sizing:border-box;}
+.g2c-eye{position:absolute;left:8px;top:7px;cursor:pointer;color:#777;}
+.g2c-eye:hover{color:#000;}
+.gform-settings-panel__content,.g2c-panel,.g2c-section{overflow:visible!important;}
+.g2c-dd{position:relative;width:100%;}
+.g2c-display{height:38px;border:1px solid #ccc;border-radius:8px;padding:0 10px;display:flex;align-items:center;cursor:pointer;background:#fff;}
+.g2c-options{position:absolute;top:100%;right:0;left:0;background:#fff;border:1px solid #ccc;border-radius:8px;max-height:220px;overflow-y:auto;display:none;z-index:9999;}
+.g2c-option{padding:8px 10px;cursor:pointer;text-align:right;}
+.g2c-option:hover{background:#f1f1f1;}
+
+</style>
+<?php
+});
