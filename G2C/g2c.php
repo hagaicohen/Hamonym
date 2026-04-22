@@ -30,6 +30,9 @@ add_action('template_redirect', function() {
     if (defined('DOING_AJAX') && DOING_AJAX) return;
     if (!isset($_GET['lowprofilecode'])) return;
 
+    // 🔥 LOG RETURN
+    g2c_log('🔥 RETURN GET PARAMS', $_GET);
+
     $lp       = sanitize_text_field($_GET['lowprofilecode']);
     $response = $_GET['ResponseCode'] ?? '';
 
@@ -103,34 +106,6 @@ add_action('template_redirect', function() {
             g2c_log('HOOK ERROR', $e->getMessage());
         }
 
-        // 🔥 FALLBACK CONTRIBUTORS
-        try {
-
-            $campaign_id = url_to_postid($entry['source_url']);
-            g2c_log('CAMPAIGN ID', $campaign_id);
-
-            if ($campaign_id) {
-
-                $contributors = get_post_meta($campaign_id, 'contributors', true);
-                g2c_log('EXISTING CONTRIBUTORS', $contributors);
-
-                if (!is_array($contributors)) {
-                    $contributors = [];
-                }
-
-                $contributors[] = [
-                    'name' => $post['contact'],
-                    'sum'  => $post['sum']
-                ];
-
-                update_post_meta($campaign_id, 'contributors', $contributors);
-
-                g2c_log('FALLBACK CONTRIBUTOR ADDED', $contributors);
-            }
-
-        } catch (Throwable $e) {
-            g2c_log('FALLBACK ERROR', $e->getMessage());
-        }
     }
 
     $clean_url = strtok(home_url($_SERVER['REQUEST_URI']), '?');
@@ -159,30 +134,55 @@ function g2c_create_payment() {
 
     $amount = floatval($entry[$settings['amount']] ?? 0);
     $email  = $entry[$settings['email']] ?? '';
-    $name   = $entry[$settings['first_name']] ?? '';
+    $first = $entry[$settings['first_name']] ?? '';
+    $last  = $entry[$settings['last_name']] ?? '';
+
+    // fallback כמו ב-return
+    if (empty($first)) $first = rgar($entry, '9.3');
+    if (empty($last))  $last  = rgar($entry, '9.6');
+
+    $name = trim($first . ' ' . $last);
 
     $success_url = !empty($settings['success_url']) ? $settings['success_url'] : home_url('/');
     $fail_url    = !empty($settings['fail_url'])    ? $settings['fail_url']    : home_url('/');
+
+    // 🔥 LOG BEFORE SEND
+    g2c_log('🔥 CREATE PAYMENT START', [
+        'form_id' => $form_id,
+        'entry_id' => $entry_id,
+        'amount' => $amount,
+        'email' => $email,
+        'name' => $name
+    ]);
+
+    $payload = [
+        "TerminalNumber" => $settings['g2c_terminal'],
+        "ApiName"        => $settings['g2c_api_user'],
+        "ApiPassword"    => $settings['g2c_api_password'],
+        "Amount"         => $amount,
+        "CustomerName"   => $name,
+        "CustomerEmail"  => $email,
+        "ReturnValue"    => (string)$entry_id,
+        "SuccessRedirectUrl" => $success_url,
+        "FailedRedirectUrl"  => $fail_url
+    ];
+
+    g2c_log('🚀 PAYLOAD TO CARDCOM', $payload);
 
     $response = wp_remote_post(
         "https://secure.cardcom.solutions/api/v11/LowProfile/Create",
         [
             'headers' => ['Content-Type' => 'application/json'],
-            'body'    => json_encode([
-                "TerminalNumber" => $settings['g2c_terminal'],
-                "ApiName"        => $settings['g2c_api_user'],
-                "ApiPassword"    => $settings['g2c_api_password'],
-                "Amount"         => $amount,
-                "CustomerName"   => $name,
-                "CustomerEmail"  => $email,
-                "ReturnValue"    => (string)$entry_id,
-                "SuccessRedirectUrl" => $success_url,
-                "FailedRedirectUrl"  => $fail_url
-            ])
+            'body'    => json_encode($payload)
         ]
     );
 
-    $json = json_decode(wp_remote_retrieve_body($response), true);
+    $raw  = wp_remote_retrieve_body($response);
+    $json = json_decode($raw, true);
+
+    // 🔥 LOG RESPONSE
+    g2c_log('📥 CARDCOM RAW RESPONSE', $raw);
+    g2c_log('📥 CARDCOM JSON RESPONSE', $json);
 
     if (empty($json['LowProfileId']) || empty($json['Url'])) {
         wp_die();
