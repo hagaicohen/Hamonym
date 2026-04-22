@@ -157,6 +157,18 @@ value="<?= esc_attr($settings['g2c_api_user'] ?? '') ?>">
 value="<?= esc_attr($settings['g2c_product'] ?? '') ?>">
 </div>
 
+<div class="g2c-field">
+<label>SUCCESS URL</label>
+<input type="text" name="g2c_settings[success_url]"
+value="<?= esc_attr($settings['success_url'] ?? '') ?>">
+</div>
+
+<div class="g2c-field">
+<label>FAIL URL</label>
+<input type="text" name="g2c_settings[fail_url]"
+value="<?= esc_attr($settings['fail_url'] ?? '') ?>">
+</div>
+
 </div>
 
 <!-- 📐 iframe -->
