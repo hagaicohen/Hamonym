@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: G2C - CARD COM (FINAL WORKING)
+Plugin Name: G2C - CARD COM
 */
 
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -8,7 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 require_once plugin_dir_path(__FILE__) . 'admin/g2c-admin.php';
 
 /* =========================
-   LOGGER (תמיד עובד)
+   LOGGER
 ========================= */
 function g2c_log($msg, $data = null) {
     $file = WP_CONTENT_DIR . '/g2c.log';
@@ -30,11 +30,10 @@ add_action('template_redirect', function() {
     if (defined('DOING_AJAX') && DOING_AJAX) return;
     if (!isset($_GET['lowprofilecode'])) return;
 
-    // 🔥 LOG RETURN
     g2c_log('🔥 RETURN GET PARAMS', $_GET);
 
-    $lp       = sanitize_text_field($_GET['lowprofilecode']);
-    $response = $_GET['ResponseCode'] ?? ($_GET['ResponeCode'] ?? '');
+    $lp = sanitize_text_field($_GET['lowprofilecode']);
+    $response_code = $_GET['ResponseCode'] ?? ($_GET['ResponeCode'] ?? null);
 
     global $wpdb;
 
@@ -46,96 +45,97 @@ add_action('template_redirect', function() {
         LIMIT 1
     ", $lp));
 
-    if (!$entry_id) return;
+    if (!$entry_id) {
+        g2c_log('❌ ENTRY NOT FOUND FOR LP', $lp);
+        return;
+    }
 
     $entry = GFAPI::get_entry($entry_id);
     if (is_wp_error($entry) || empty($entry)) return;
 
-    if ($response == '0') {
+    $is_success = (trim((string)$response_code) === '0');
+
+    if ($is_success) {
+
+        $sum = floatval(preg_replace('/[^\d.]/', '', rgar($entry, '151')));
 
         GFAPI::update_entry_property($entry_id, 'payment_status', 'Paid');
+        GFAPI::update_entry_property($entry_id, 'payment_date', date('Y-m-d H:i:s'));
+        GFAPI::update_entry_property($entry_id, 'payment_amount', $sum);
+
+        GFAPI::add_note(
+            $entry_id,
+            0,
+            'Cardcom',
+            'התשלום הושלם: סכום: ₪ ' . number_format($sum, 2) . '. מזהה עסקה: ' . ($_GET['internalDealNumber'] ?? $lp)
+        );
+
         gform_update_meta($entry_id, 'transaction_id', $_GET['internalDealNumber'] ?? $lp);
 
         g2c_log('HANDLE RETURN START', $entry_id);
 
-        // timezone
-        $tz = get_option('timezone_string');
-        if (empty($tz)) $tz = 'Asia/Jerusalem';
-        date_default_timezone_set($tz);
-
-        g2c_log('FEEDS RAW', $feeds);
-
-        // FEED
         $feeds = GFAPI::get_feeds(null, $entry['form_id']);
-        $feed  = (!empty($feeds) && !is_wp_error($feeds)) ? $feeds[0] : null;
-        $meta  = (is_array($feed) && isset($feed['meta']) && is_array($feed['meta']))
-            ? $feed['meta']
-            : [];
+        $feed  = (!empty($feeds) && !is_wp_error($feeds)) ? $feeds[0] : [];
+        $meta  = (isset($feed['meta']) && is_array($feed['meta'])) ? $feed['meta'] : [];
 
-        // סכום
-        $sum = floatval(preg_replace('/[^\d.]/', '', rgar($entry, '151')));
+        $first_name = isset($meta['billingInformation_firstName']) ? rgar($entry, $meta['billingInformation_firstName']) : '';
+        $last_name  = isset($meta['billingInformation_lastName'])  ? rgar($entry, $meta['billingInformation_lastName'])  : '';
+        $email      = isset($meta['billingInformation_email'])     ? rgar($entry, $meta['billingInformation_email'])     : '';
+        $city       = isset($meta['billingInformation_city'])      ? rgar($entry, $meta['billingInformation_city'])      : '';
 
-        // 🔥 מיפוי בטוח (זה התיקון הקריטי)
-        $first_name = isset($meta['billingInformation_firstName']) 
-            ? rgar($entry, $meta['billingInformation_firstName']) 
-            : '';
+        if (!$first_name) $first_name = rgar($entry, '9.3');
+        if (!$last_name)  $last_name  = rgar($entry, '9.6');
+        if (!$email)      $email      = rgar($entry, '10');
+        if (!$city)       $city       = rgar($entry, '11.3');
 
-        $last_name = isset($meta['billingInformation_lastName']) 
-            ? rgar($entry, $meta['billingInformation_lastName']) 
-            : '';
+       $post = [
+            'ResponseCode'  => 0,
+            'Response'      => '000',
+            'TransactionId' => $_GET['internalDealNumber'] ?? $lp,
+            'Amount'        => $sum,
+            'Currency'      => 1,
 
-        $email = isset($meta['billingInformation_email']) 
-            ? rgar($entry, $meta['billingInformation_email']) 
-            : '';
+            'sum'           => $sum,
+            'index'         => $lp,
 
-        $city = isset($meta['billingInformation_city']) 
-            ? rgar($entry, $meta['billingInformation_city']) 
-            : '';
+            'first_name'    => $first_name ?: 'תורם',
+            'last_name'     => $last_name ?: '',
+            'full_name'     => trim($first_name . ' ' . $last_name), // 🔥 חשוב
 
-        // fallback
-        if (empty($first_name)) $first_name = rgar($entry, '9.3');
-        if (empty($last_name))  $last_name  = rgar($entry, '9.6');
-        if (empty($email))      $email      = rgar($entry, '10');
-        if (empty($city))       $city       = rgar($entry, '11.3');
+            'email'         => $email,
+            'city'          => $city,
+            'contact'       => trim($first_name . ' ' . $last_name),
 
-        $post = [
-            'ResponseCode'    => 0,
-            'Response'        => '000',
-            'TransactionId'   => $_GET['internalDealNumber'] ?? $lp,
-            'Amount'          => $sum,
-            'Currency'        => 1,
-
-            // שלך
-            'sum'             => $sum,
-            'index'           => $lp,
-            'first_name'      => $first_name,
-            'last_name'       => $last_name,
-            'email'           => $email,
-            'city'            => $city,
-            'contact'         => trim($first_name . ' ' . $last_name),
-            'date'            => current_time('mysql'),
+            'phone'         => rgar($entry, '10') ?? '', // 🔥 אם יש
+            'date'          => date('c'),
         ];
+
+
+        $now = current_time('mysql');
+
+        GFAPI::update_entry_property($entry_id, 'payment_date', $now);
+        GFAPI::update_entry_property($entry_id, 'date_updated', $now);
+
+        gform_update_meta($entry_id, 'payment_date', $now);
+        gform_update_meta($entry_id, 'created_at', $now);
+        gform_update_meta($entry_id, 'transaction_date', $now);
 
         g2c_log('POST BEFORE HOOK', $post);
 
         try {
-            $feed_safe = is_array($feed) ? $feed : [];
-            do_action('gform_tranzila_payment_complete', $post, $entry, $feed_safe);
-
+            do_action('gform_tranzila_payment_complete', $post, $entry, $feed);
             g2c_log('HOOK FIRED SUCCESS');
-
-            g2c_log('🔥 AFTER HOOK', [
-                'entry_id' => $entry_id,
-                'post' => $post
-            ]);
-
         } catch (Throwable $e) {
             g2c_log('HOOK ERROR', $e->getMessage());
         }
+
+    } else {
+
+        GFAPI::update_entry_property($entry_id, 'payment_status', 'Failed');
+        g2c_log('PAYMENT FAILED', $entry_id);
     }
 
-    $clean_url = strtok(home_url($_SERVER['REQUEST_URI']), '?');
-    wp_safe_redirect($clean_url);
+    wp_safe_redirect(strtok(home_url($_SERVER['REQUEST_URI']), '?'));
     exit;
 });
 
@@ -160,10 +160,9 @@ function g2c_create_payment() {
 
     $amount = floatval($entry[$settings['amount']] ?? 0);
     $email  = $entry[$settings['email']] ?? '';
-    $first = $entry[$settings['first_name']] ?? '';
-    $last  = $entry[$settings['last_name']] ?? '';
+    $first  = $entry[$settings['first_name']] ?? '';
+    $last   = $entry[$settings['last_name']] ?? '';
 
-    // fallback כמו ב-return
     if (empty($first)) $first = rgar($entry, '9.3');
     if (empty($last))  $last  = rgar($entry, '9.6');
 
@@ -172,7 +171,6 @@ function g2c_create_payment() {
     $success_url = !empty($settings['success_url']) ? $settings['success_url'] : home_url('/');
     $fail_url    = !empty($settings['fail_url'])    ? $settings['fail_url']    : home_url('/');
 
-    // 🔥 LOG BEFORE SEND
     g2c_log('🔥 CREATE PAYMENT START', [
         'form_id' => $form_id,
         'entry_id' => $entry_id,
@@ -206,15 +204,16 @@ function g2c_create_payment() {
     $raw  = wp_remote_retrieve_body($response);
     $json = json_decode($raw, true);
 
-    // 🔥 LOG RESPONSE
-    g2c_log('📥 CARDCOM RAW RESPONSE', $raw);
     g2c_log('📥 CARDCOM JSON RESPONSE', $json);
 
     if (empty($json['LowProfileId']) || empty($json['Url'])) {
         wp_die();
     }
 
+    // 🔥 קריטי — זה מה שתיקן לך את הבאג
     gform_update_meta($entry_id, 'lowprofile_id', $json['LowProfileId']);
+
+    GFAPI::update_entry_property($entry_id, 'payment_status', 'Processing');
 
     echo json_encode(['url' => $json['Url']]);
     wp_die();
@@ -232,49 +231,32 @@ jQuery(function($){
     let opened = false;
 
     $(document).on('gform_confirmation_loaded', function(event, formId){
-        console.log('G2C: FORM CONFIRMATION LOADED', formId);
 
         if (opened) return;
         opened = true;
 
         const entryId = $('#g2c-entry-id').data('id');
-        console.log('G2C: ENTRY ID', entryId);
-
         if (!entryId) return;
 
-       $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
-    action: 'g2c_create_payment',
-    form_id: formId,
-    entry_id: entryId
-}, function(res){
+        $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
+            action: 'g2c_create_payment',
+            form_id: formId,
+            entry_id: entryId
+        }, function(res){
 
-    console.log('RESPONSE RAW:', res);
-    console.log('TYPE:', typeof res);
+            if (typeof res === 'string') {
+                try { res = JSON.parse(res); } catch(e) { return; }
+            }
 
-    // 🔥 התיקון
-    if (typeof res === 'string') {
-        try {
-            res = JSON.parse(res);
-        } catch(e) {
-            console.log('❌ JSON PARSE FAILED');
-            return;
-        }
-    }
+            if (!res.url) return;
 
-    if (!res.url) {
-        console.log('❌ RESPONSE NOT URL');
-        return;
-    }
+            $('body').append(
+                '<div style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;background:#fff;">' +
+                '<iframe src="'+res.url+'" style="width:100%;height:100%;border:none;"></iframe>' +
+                '</div>'
+            );
 
-    console.log('✅ OPEN IFRAME', res.url);
-
-    $('body').append(
-        '<div id="g2c-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;background:#fff;">' +
-            '<iframe id="g2c-frame" src="'+res.url+'" style="width:100%;height:100%;border:none;"></iframe>' +
-        '</div>'
-    );
-
-}, 'json');
+        }, 'json');
     });
 
 });
