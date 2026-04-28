@@ -63,13 +63,6 @@ add_action('template_redirect', function() {
         GFAPI::update_entry_property($entry_id, 'payment_date', date('Y-m-d H:i:s'));
         GFAPI::update_entry_property($entry_id, 'payment_amount', $sum);
 
-        GFAPI::add_note(
-            $entry_id,
-            0,
-            'Cardcom',
-            'התשלום הושלם: סכום: ₪ ' . number_format($sum, 2) . '. מזהה עסקה: ' . ($_GET['internalDealNumber'] ?? $lp)
-        );
-
         gform_update_meta($entry_id, 'transaction_id', $_GET['internalDealNumber'] ?? $lp);
 
         g2c_log('HANDLE RETURN START', $entry_id);
@@ -110,19 +103,10 @@ add_action('template_redirect', function() {
             'date'          => date('c'),
         ];
 
-
-        $now = current_time('mysql');
-
-        GFAPI::update_entry_property($entry_id, 'payment_date', $now);
-        GFAPI::update_entry_property($entry_id, 'date_updated', $now);
-
-        gform_update_meta($entry_id, 'payment_date', $now);
-        gform_update_meta($entry_id, 'created_at', $now);
-        gform_update_meta($entry_id, 'transaction_date', $now);
-
         g2c_log('POST BEFORE HOOK', $post);
 
         try {
+            g2c_log('FINAL POST SENT TO HOOK', $post);
             do_action('gform_tranzila_payment_complete', $post, $entry, $feed);
             g2c_log('HOOK FIRED SUCCESS');
         } catch (Throwable $e) {
@@ -162,6 +146,8 @@ function g2c_create_payment() {
     $email  = $entry[$settings['email']] ?? '';
     $first  = $entry[$settings['first_name']] ?? '';
     $last   = $entry[$settings['last_name']] ?? '';
+    $width  = intval($settings['g2c_iframe_width']  ?? 600);
+    $height = intval($settings['g2c_iframe_height'] ?? 700);
 
     if (empty($first)) $first = rgar($entry, '9.3');
     if (empty($last))  $last  = rgar($entry, '9.6');
@@ -215,7 +201,11 @@ function g2c_create_payment() {
 
     GFAPI::update_entry_property($entry_id, 'payment_status', 'Processing');
 
-    echo json_encode(['url' => $json['Url']]);
+    echo json_encode([
+    'url'    => $json['Url'],
+    'width'  => $width,
+    'height' => $height
+]);
     wp_die();
 }
 
@@ -250,9 +240,14 @@ jQuery(function($){
 
             if (!res.url) return;
 
-            $('body').append(
-                '<div style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;background:#fff;">' +
-                '<iframe src="'+res.url+'" style="width:100%;height:100%;border:none;"></iframe>' +
+            // 🔥 הגודל מהשרת (גנרי)
+            var width  = res.width  || 600;
+            var height = res.height || 700;
+
+            // 🔥 מחליף את אזור ה-confirmation (בתוך הקמפיין!)
+            $('.gform_confirmation_message').html(
+                '<div style="max-width:'+width+'px;margin:20px auto;">' +
+                    '<iframe src="'+res.url+'" style="width:100%;height:'+height+'px;border:none;"></iframe>' +
                 '</div>'
             );
 
