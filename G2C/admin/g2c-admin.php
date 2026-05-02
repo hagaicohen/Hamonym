@@ -1,10 +1,8 @@
 <?php
 
-
 add_action('admin_footer', function() {
     echo "<script>console.log('🔥 ADMIN FILE LOADED');</script>";
 });
-
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
@@ -58,15 +56,19 @@ function g2c_select($name, $form_id, $settings) {
 }
 
 // =======================
-// 🔥 MENU
+// 🔥 MENU (תיקון כאן בלבד)
+// =======================
+
+// =======================
+// 🔥 MENU (תיקון סופי)
 // =======================
 
 add_filter('gform_form_settings_menu', function($menu_items) {
 
-    $menu_items['g2c'] = array(
+    $menu_items[] = array(   // 🔥 זה התיקון
         'name'  => 'g2c',
         'label' => 'Cardcom',
-        'icon'  => 'gform-icon--credit-card'
+        'icon'  => 'gform-icon--credit-card',
     );
 
     return $menu_items;
@@ -78,188 +80,122 @@ add_filter('gform_form_settings_menu', function($menu_items) {
 // =======================
 
 add_action('gform_form_settings_page_g2c', function() {
+    $form_id = absint($_GET['id'] ?? 0);
 
-$form_id = absint($_GET['id'] ?? 0);
-
-// שמירה
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['g2c_settings'])) {
-
-    $new_settings = $_POST['g2c_settings'];
-    update_option('g2c_settings_' . $form_id, $new_settings);
-
-    echo '<div class="updated"><p>נשמר ✔</p></div>';
-}
-
-// טעינה
-$settings = get_option('g2c_settings_' . $form_id, []);
-
-?>
-
-<h2 class="g2c-title">הגדרות Cardcom 💳</h2>
-<p class="g2c-sub">הגדרת חיבור ומיפוי שדות לתשלום מאובטח</p>
-
-<div class="g2c-panel">
-
-<!-- 🔑 חיבור -->
-<div class="g2c-section">
-<h4>פרטי חיבור</h4>
-
-<div class="g2c-field">
-<label>מספר מסוף</label>
-<input type="text" name="g2c_settings[g2c_terminal]"
-value="<?= esc_attr($settings['g2c_terminal'] ?? '') ?>">
-</div>
-
-<div class="g2c-field">
-<label>API User</label>
-<input type="text" name="g2c_settings[g2c_api_user]"
-value="<?= esc_attr($settings['g2c_api_user'] ?? '') ?>">
-</div>
-
-<div class="g2c-field">
-<label>API Password</label>
-<div class="g2c-password-wrap">
-    <input type="password" id="g2c_api_password"
-    name="g2c_settings[g2c_api_password]"
-    value="<?= esc_attr($settings['g2c_api_password'] ?? '') ?>">
-    <span class="dashicons dashicons-visibility g2c-eye"
-          onclick="togglePassword('g2c_api_password', this)"></span>
-</div>
-</div>
-
-</div>
-
-<!-- 👤 לקוח -->
-<div class="g2c-section">
-<h4>פרטי לקוח (מיפוי)</h4>
-
-<div class="g2c-field"><label>שם פרטי</label><?php g2c_select('first_name', $form_id, $settings); ?></div>
-<div class="g2c-field"><label>שם משפחה</label><?php g2c_select('last_name', $form_id, $settings); ?></div>
-<div class="g2c-field"><label>Comments</label><?php g2c_select('comments', $form_id, $settings); ?></div>
-<div class="g2c-field"><label>Campaign ID</label><?php g2c_select('campaign_id', $form_id, $settings); ?></div>
-<div class="g2c-field"><label>טלפון</label><?php g2c_select('phone', $form_id, $settings); ?></div>
-<div class="g2c-field"><label>אימייל</label><?php g2c_select('email', $form_id, $settings); ?></div>
-<div class="g2c-field"><label>כתובת</label><?php g2c_select('address', $form_id, $settings); ?></div>
-<div class="g2c-field"><label>עיר</label><?php g2c_select('city', $form_id, $settings); ?></div>
-<div class="g2c-field"><label>מיקוד</label><?php g2c_select('zip', $form_id, $settings); ?></div>
-
-</div>
-
-<!-- 💰 עסקה -->
-<div class="g2c-section">
-<h4>פרטי העסקה</h4>
-
-<div class="g2c-field">
-<label>סה"כ תשלום</label>
-<?php g2c_select('amount', $form_id, $settings); ?>
-</div>
-
-<div class="g2c-field">
-<label>תיאור מוצר</label>
-<input type="text" name="g2c_settings[g2c_product]"
-value="<?= esc_attr($settings['g2c_product'] ?? '') ?>">
-</div>
-
-<div class="g2c-field">
-<label>SUCCESS URL</label>
-<input type="text" name="g2c_settings[success_url]"
-value="<?= esc_attr($settings['success_url'] ?? '') ?>">
-</div>
-
-<div class="g2c-field">
-<label>FAIL URL</label>
-<input type="text" name="g2c_settings[fail_url]"
-value="<?= esc_attr($settings['fail_url'] ?? '') ?>">
-</div>
-
-</div>
-
-<!-- 📐 iframe -->
-<div class="g2c-section">
-<h4>חלון תשלום</h4>
-
-<div class="g2c-field">
-<label>רוחב</label>
-<input type="number" name="g2c_settings[g2c_iframe_width]"
-value="<?= esc_attr($settings['g2c_iframe_width'] ?? 600) ?>">
-</div>
-
-<div class="g2c-field">
-<label>גובה</label>
-<input type="number" name="g2c_settings[g2c_iframe_height]"
-value="<?= esc_attr($settings['g2c_iframe_height'] ?? 700) ?>">
-</div>
-
-</div>
-
-<button class="button button-primary">שמור</button>
-
-</div>
-
-<script>
-function togglePassword(id, el) {
-    const input = document.getElementById(id);
-
-    if (input.type === "password") {
-        input.type = "text";
-        el.classList.remove('dashicons-visibility');
-        el.classList.add('dashicons-hidden');
-    } else {
-        input.type = "password";
-        el.classList.remove('dashicons-hidden');
-        el.classList.add('dashicons-visibility');
+    // שמירה
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['g2c_settings'])) {
+        check_admin_referer('gform_settings_save', 'gform_settings_save');
+        $new_settings = $_POST['g2c_settings'];
+        update_option('g2c_settings_' . $form_id, $new_settings);
+        GFCommon::add_message('נשמר ✔');
     }
-}
-</script>
 
-<script>
-jQuery(function($){
+    // טעינה
+    $settings = get_option('g2c_settings_' . $form_id, []);
 
-    $(document).on('click', '.g2c-display', function(){
-        $('.g2c-options').hide();
-        $(this).siblings('.g2c-options').toggle();
-    });
+    // 🔥 header מתוקן - חיוני כדי ש-Gravity Forms יזהה את הדף
+    GFFormSettings::page_header();
+    ?>
 
-    $(document).on('click', '.g2c-option', function(){
-        const val = $(this).data('val');
-        const text = $(this).text();
-        const box = $(this).closest('.g2c-dd');
+    <div class="gform-settings__content">
+        <form method="post">
+            <?php wp_nonce_field('gform_settings_save', 'gform_settings_save'); ?>
 
-        box.find('.g2c-val').val(val);
-        box.find('.g2c-display').text(text);
-        box.find('.g2c-options').hide();
-    });
+            <h2 class="g2c-title">הגדרות Cardcom 💳</h2>
+            <p class="g2c-sub">הגדרת חיבור ומיפוי שדות לתשלום מאובטח</p>
 
-    $(document).on('click', function(e){
-        if (!$(e.target).closest('.g2c-dd').length) {
-            $('.g2c-options').hide();
-        }
-    });
+            <div class="g2c-panel">
+                <!-- 🔑 חיבור -->
+                <div class="g2c-section">
+                    <h4>פרטי חיבור</h4>
+                    <div class="g2c-field">
+                        <label>מספר מסוף</label>
+                        <input type="text" name="g2c_settings[g2c_terminal]" value="<?= esc_attr($settings['g2c_terminal'] ?? '') ?>">
+                    </div>
+                    <div class="g2c-field">
+                        <label>API User</label>
+                        <input type="text" name="g2c_settings[g2c_api_user]" value="<?= esc_attr($settings['g2c_api_user'] ?? '') ?>">
+                    </div>
+                    <div class="g2c-field">
+                        <label>API Password</label>
+                        <div class="g2c-password-wrap">
+                            <input type="password" id="g2c_api_password" name="g2c_settings[g2c_api_password]" value="<?= esc_attr($settings['g2c_api_password'] ?? '') ?>">
+                            <span class="dashicons dashicons-visibility g2c-eye" onclick="togglePassword('g2c_api_password', this)"></span>
+                        </div>
+                    </div>
+                </div>
 
-});
-</script>
+                <!-- 👤 לקוח -->
+                <div class="g2c-section">
+                    <h4>פרטי לקוח (מיפוי)</h4>
+                    <div class="g2c-field"><label>שם פרטי</label><?php g2c_select('first_name', $form_id, $settings); ?></div>
+                    <div class="g2c-field"><label>שם משפחה</label><?php g2c_select('last_name', $form_id, $settings); ?></div>
+                    <div class="g2c-field"><label>Comments</label><?php g2c_select('comments', $form_id, $settings); ?></div>
+                    <div class="g2c-field"><label>Campaign ID</label><?php g2c_select('campaign_id', $form_id, $settings); ?></div>
+                    <div class="g2c-field"><label>טלפון</label><?php g2c_select('phone', $form_id, $settings); ?></div>
+                    <div class="g2c-field"><label>אימייל</label><?php g2c_select('email', $form_id, $settings); ?></div>
+                    <div class="g2c-field"><label>כתובת</label><?php g2c_select('address', $form_id, $settings); ?></div>
+                    <div class="g2c-field"><label>עיר</label><?php g2c_select('city', $form_id, $settings); ?></div>
+                    <div class="g2c-field"><label>מיקוד</label><?php g2c_select('zip', $form_id, $settings); ?></div>
+                </div>
 
-<?php
+                <!-- 💰 עסקה -->
+                <div class="g2c-section">
+                    <h4>פרטי העסקה</h4>
+                    <div class="g2c-field">
+                        <label>סה"כ תשלום</label>
+                        <?php g2c_select('amount', $form_id, $settings); ?>
+                    </div>
+                    <div class="g2c-field">
+                        <label>תיאור מוצר</label>
+                        <input type="text" name="g2c_settings[g2c_product]" value="<?= esc_attr($settings['g2c_product'] ?? '') ?>">
+                    </div>
+                    <div class="g2c-field">
+                        <label>SUCCESS URL</label>
+                        <input type="text" name="g2c_settings[success_url]" value="<?= esc_attr($settings['success_url'] ?? '') ?>">
+                    </div>
+                    <div class="g2c-field">
+                        <label>FAIL URL</label>
+                        <input type="text" name="g2c_settings[fail_url]" value="<?= esc_attr($settings['fail_url'] ?? '') ?>">
+                    </div>
+                </div>
+
+                <!-- 📐 iframe -->
+                <div class="g2c-section">
+                    <h4>חלון תשלום</h4>
+                    <div class="g2c-field">
+                        <label>רוחב</label>
+                        <input type="number" name="g2c_settings[g2c_iframe_width]" value="<?= esc_attr($settings['g2c_iframe_width'] ?? 600) ?>">
+                    </div>
+                    <div class="g2c-field">
+                        <label>גובה</label>
+                        <input type="number" name="g2c_settings[g2c_iframe_height]" value="<?= esc_attr($settings['g2c_iframe_height'] ?? 700) ?>">
+                    </div>
+                </div>
+
+                <button class="button button-primary">שמור</button>
+            </div>
+        </form>
+    </div>
+
+    <?php
+    // 🔥 חיוני: סגור את הדף עם page_footer
+    GFFormSettings::page_footer();
 });
 
 // =======================
-// 🎨 CSS (בדיוק כמו שלך)
+// 🎨 STYLE (ללא שינוי)
 // =======================
 
 add_action('admin_head', function () {
 ?>
 <style>
 
-/* בסיס */
 .g2c-title { font-size:22px; font-weight:700; margin-bottom:5px; }
 .g2c-sub { color:#666; margin-bottom:20px; }
 
-/* הפאנל – בלי משחקים עם רוחב */
-.g2c-panel {
-    margin-top: 20px;
-}
+.g2c-panel { margin-top:20px; }
 
-/* sections */
 .g2c-section {
     background:#fff;
     border:1px solid #ddd;
@@ -268,10 +204,7 @@ add_action('admin_head', function () {
     margin-bottom:16px;
 }
 
-/* fields */
-.g2c-field {
-    margin-bottom:12px;
-}
+.g2c-field { margin-bottom:12px; }
 
 .g2c-field label {
     display:block;
@@ -279,8 +212,7 @@ add_action('admin_head', function () {
     font-weight:500;
 }
 
-.g2c-field input,
-.g2c-field select {
+.g2c-field input {
     width:100%;
     height:34px;
     border:1px solid #ccc;
@@ -289,7 +221,6 @@ add_action('admin_head', function () {
     box-sizing:border-box;
 }
 
-/* dropdown */
 .g2c-dd { position:relative; }
 
 .g2c-display {
@@ -326,6 +257,7 @@ add_action('admin_head', function () {
 }
 
 </style>
+
 <?php
 });
 
