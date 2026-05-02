@@ -1,7 +1,11 @@
 <?php
+
+
 add_action('admin_footer', function() {
     echo "<script>console.log('🔥 ADMIN FILE LOADED');</script>";
 });
+
+
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 // =======================
@@ -94,7 +98,6 @@ $settings = get_option('g2c_settings_' . $form_id, []);
 <h2 class="g2c-title">הגדרות Cardcom 💳</h2>
 <p class="g2c-sub">הגדרת חיבור ומיפוי שדות לתשלום מאובטח</p>
 
-<form method="post">
 <div class="g2c-panel">
 
 <!-- 🔑 חיבור -->
@@ -192,7 +195,6 @@ value="<?= esc_attr($settings['g2c_iframe_height'] ?? 700) ?>">
 <button class="button button-primary">שמור</button>
 
 </div>
-</form>
 
 <script>
 function togglePassword(id, el) {
@@ -248,31 +250,82 @@ add_action('admin_head', function () {
 ?>
 <style>
 
-.g2c-title { font-size:22px;font-weight:700;margin-bottom:5px;}
-.g2c-sub { color:#666;margin-bottom:20px;}
-.g2c-panel { max-width:600px;margin-top:20px;}
-.g2c-section { background:#fff;border:1px solid #ddd;border-radius:8px;padding:20px;margin-bottom:20px;}
-.g2c-section h4 { margin-bottom:15px;}
-.g2c-field { display:flex;flex-direction:column;margin-bottom:15px;}
-.g2c-field label { margin-bottom:5px;font-weight:500;}
-.g2c-field input,.g2c-field select { width:100%;max-width:100%;height:38px;border-radius:8px;border:1px solid #ccc;padding:0 10px;box-sizing:border-box;}
-.g2c-field select { display:block;min-width:0;}
-@media (max-width:600px){
-.g2c-panel{max-width:100%;padding:0 10px;}
-.g2c-field input,.g2c-field select{width:100%;}
+/* בסיס */
+.g2c-title { font-size:22px; font-weight:700; margin-bottom:5px; }
+.g2c-sub { color:#666; margin-bottom:20px; }
+
+/* הפאנל – בלי משחקים עם רוחב */
+.g2c-panel {
+    margin-top: 20px;
 }
-.g2c-field input:focus,.g2c-field select:focus{border-color:#2271b1;outline:none;}
-.g2c-password-wrap{position:relative;width:100%;}
-.g2c-password-wrap input{width:100%;padding-left:35px;box-sizing:border-box;}
-.g2c-eye{position:absolute;left:8px;top:7px;cursor:pointer;color:#777;}
-.g2c-eye:hover{color:#000;}
-.gform-settings-panel__content,.g2c-panel,.g2c-section{overflow:visible!important;}
-.g2c-dd{position:relative;width:100%;}
-.g2c-display{height:38px;border:1px solid #ccc;border-radius:8px;padding:0 10px;display:flex;align-items:center;cursor:pointer;background:#fff;}
-.g2c-options{position:absolute;top:100%;right:0;left:0;background:#fff;border:1px solid #ccc;border-radius:8px;max-height:220px;overflow-y:auto;display:none;z-index:9999;}
-.g2c-option{padding:8px 10px;cursor:pointer;text-align:right;}
-.g2c-option:hover{background:#f1f1f1;}
+
+/* sections */
+.g2c-section {
+    background:#fff;
+    border:1px solid #ddd;
+    border-radius:6px;
+    padding:16px;
+    margin-bottom:16px;
+}
+
+/* fields */
+.g2c-field {
+    margin-bottom:12px;
+}
+
+.g2c-field label {
+    display:block;
+    margin-bottom:4px;
+    font-weight:500;
+}
+
+.g2c-field input,
+.g2c-field select {
+    width:100%;
+    height:34px;
+    border:1px solid #ccc;
+    border-radius:4px;
+    padding:0 8px;
+    box-sizing:border-box;
+}
+
+/* dropdown */
+.g2c-dd { position:relative; }
+
+.g2c-display {
+    height:34px;
+    border:1px solid #ccc;
+    border-radius:4px;
+    padding:0 8px;
+    display:flex;
+    align-items:center;
+    cursor:pointer;
+    background:#fff;
+}
+
+.g2c-options {
+    position:absolute;
+    top:100%;
+    right:0;
+    left:0;
+    background:#fff;
+    border:1px solid #ccc;
+    max-height:200px;
+    overflow-y:auto;
+    display:none;
+    z-index:1000;
+}
+
+.g2c-option {
+    padding:6px 8px;
+    cursor:pointer;
+}
+
+.g2c-option:hover {
+    background:#f1f1f1;
+}
 
 </style>
 <?php
 });
+

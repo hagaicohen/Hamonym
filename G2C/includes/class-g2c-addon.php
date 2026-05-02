@@ -1,4 +1,5 @@
 <?php
+return;
 
 if ( ! defined( 'ABSPATH' ) ) exit;
 
@@ -12,6 +13,11 @@ class G2C_AddOn extends GFPaymentAddOn {
     protected $_supports_feeds = true;
 
     private static $_instance = null;
+
+    public function __construct() {
+    parent::__construct();
+    echo '<script>alert("G2C LOADED");</script>';
+}
 
     public static function get_instance() {
         if ( self::$_instance == null ) {

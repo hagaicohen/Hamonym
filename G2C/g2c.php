@@ -142,12 +142,10 @@ function g2c_create_payment() {
 
     $settings = get_option('g2c_settings_' . $form_id, []);
 
-    $amount = floatval($entry[$settings['amount']] ?? 0);
+    // 🔥 פרטי משתמש
     $email  = $entry[$settings['email']] ?? '';
     $first  = $entry[$settings['first_name']] ?? '';
     $last   = $entry[$settings['last_name']] ?? '';
-    $width  = intval($settings['g2c_iframe_width']  ?? 600);
-    $height = intval($settings['g2c_iframe_height'] ?? 700);
 
     if (empty($first)) $first = rgar($entry, '9.3');
     if (empty($last))  $last  = rgar($entry, '9.6');
@@ -157,27 +155,97 @@ function g2c_create_payment() {
     $success_url = !empty($settings['success_url']) ? $settings['success_url'] : home_url('/');
     $fail_url    = !empty($settings['fail_url'])    ? $settings['fail_url']    : home_url('/');
 
-    g2c_log('🔥 CREATE PAYMENT START', [
-        'form_id' => $form_id,
-        'entry_id' => $entry_id,
-        'amount' => $amount,
-        'email' => $email,
-        'name' => $name
-    ]);
+    // 🔥 שליפת FORM + מוצרים
+    $form = GFAPI::get_form($form_id);
+    $products = GFCommon::get_product_fields($form, $entry);
 
+    // 🔥 בניית map לשדות (ביצועים!)
+    $field_map = [];
+    foreach ($form['fields'] as $field) {
+        $field_map[$field->id] = $field;
+    }
+
+    $cardcom_products = [];
+    $total_amount = 0;
+
+    if (!empty($products['products'])) {
+
+        foreach ($products['products'] as $product_id => $p) {
+
+            $product_field = $field_map[$product_id] ?? null;
+
+            $title = $p['name'] ?? 'מוצר'; // fallback
+
+            // 🔥 זה הקסם: product → inventory_parent → label
+            if ($product_field && !empty($product_field->inventory_parent)) {
+
+                $parent_id = $product_field->inventory_parent;
+
+                if (!empty($field_map[$parent_id])) {
+                    $title = $field_map[$parent_id]->label;
+                }
+            }
+
+            // 🔥 מחיר + כמות
+            $price = floatval(preg_replace('/[^\d.]/', '', $p['price'] ?? 0));
+            $qty   = intval($p['quantity'] ?? 1);
+
+            if ($qty < 1) $qty = 1;
+
+            // 🔥 כל יחידה = שורה (כדי לא להסתבך עם Cardcom)
+            for ($i = 0; $i < $qty; $i++) {
+                $cardcom_products[] = [
+                    "Description" => $title,
+                    "UnitCost"    => round($price, 2)
+                ];
+            }
+
+            $total_amount += $price * $qty;
+
+            // 🔥 לוג
+            g2c_log('PRODUCT MAPPED', [
+                'product_id' => $product_id,
+                'title'      => $title,
+                'price'      => $price,
+                'qty'        => $qty
+            ]);
+        }
+    }
+
+    // 🔥 fallback אם אין מוצרים
+    if (empty($cardcom_products)) {
+
+        $amount = round(floatval($entry[$settings['amount']] ?? 0), 2);
+
+        $cardcom_products[] = [
+            "Description" => 'תרומה',
+            "UnitCost"    => $amount
+        ];
+
+        $total_amount = $amount;
+    }
+
+    // 🔥 payload
     $payload = [
         "TerminalNumber" => $settings['g2c_terminal'],
         "ApiName"        => $settings['g2c_api_user'],
         "ApiPassword"    => $settings['g2c_api_password'],
-        "Amount"         => $amount,
-        "CustomerName"   => $name,
-        "CustomerEmail"  => $email,
-        "ReturnValue"    => (string)$entry_id,
+
+        "Amount" => round($total_amount, 2),
+
         "SuccessRedirectUrl" => $success_url,
-        "FailedRedirectUrl"  => $fail_url
+        "FailedRedirectUrl"  => $fail_url,
+
+        "ReturnValue" => (string)$entry_id,
+
+        "Document" => [
+            "To"    => $name,
+            "Email" => $email,
+            "Products" => $cardcom_products
+        ]
     ];
 
-    g2c_log('🚀 PAYLOAD TO CARDCOM', $payload);
+    g2c_log('🚀 FINAL PAYLOAD', $payload);
 
     $response = wp_remote_post(
         "https://secure.cardcom.solutions/api/v11/LowProfile/Create",
@@ -190,31 +258,50 @@ function g2c_create_payment() {
     $raw  = wp_remote_retrieve_body($response);
     $json = json_decode($raw, true);
 
-    g2c_log('📥 CARDCOM JSON RESPONSE', $json);
+    g2c_log('📥 CARDCOM RESPONSE', $json);
 
     if (empty($json['LowProfileId']) || empty($json['Url'])) {
         wp_die();
     }
 
-    // 🔥 קריטי — זה מה שתיקן לך את הבאג
     gform_update_meta($entry_id, 'lowprofile_id', $json['LowProfileId']);
-
     GFAPI::update_entry_property($entry_id, 'payment_status', 'Processing');
 
     echo json_encode([
-    'url'    => $json['Url'],
-    'width'  => $width,
-    'height' => $height
-]);
+        'url' => $json['Url']
+    ]);
+
     wp_die();
 }
-
 
 /* =========================
    IFRAME
 ========================= */
+/* =========================
+   IFRAME
+========================= */
+if (!is_admin()) {
+
 add_action('wp_footer', function() {
 ?>
+<style>
+#g2c-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #fff;
+    z-index: 999999;
+}
+
+#g2c-overlay iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+</style>
+
 <script>
 jQuery(function($){
 
@@ -240,16 +327,15 @@ jQuery(function($){
 
             if (!res.url) return;
 
-            // 🔥 הגודל מהשרת (גנרי)
-            var width  = res.width  || 600;
-            var height = res.height || 700;
+            // 🔥 ניקוי אם כבר קיים
+            $('#g2c-overlay').remove();
 
-            // 🔥 מחליף את אזור ה-confirmation (בתוך הקמפיין!)
-            $('.gform_confirmation_message').html(
-                '<div style="max-width:'+width+'px;margin:20px auto;">' +
-                    '<iframe src="'+res.url+'" style="width:100%;height:'+height+'px;border:none;"></iframe>' +
-                '</div>'
-            );
+            // 🔥 פתיחת IFRAME FULL SCREEN
+            $('body').append(`
+                <div id="g2c-overlay">
+                    <iframe src="${res.url}"></iframe>
+                </div>
+            `);
 
         }, 'json');
     });
@@ -258,6 +344,8 @@ jQuery(function($){
 </script>
 <?php
 });
+
+}
 
 
 /* =========================

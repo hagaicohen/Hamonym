@@ -3,6 +3,7 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 class G2C_AddOn extends GFPaymentAddOn {
+    
 
     protected $_version = "1.0";
     protected $_min_gravityforms_version = "2.5";
