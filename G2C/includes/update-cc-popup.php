@@ -22,7 +22,7 @@ if ( $iframe ) {
     <script>
         // submit tranzila's form on page load
         window.onload = function(){
-            console.log(document.forms);
+            //console.log(document.forms);
             document.forms['tranzila-form'].submit();
         }
     </script>

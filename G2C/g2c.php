@@ -11,13 +11,14 @@ require_once plugin_dir_path(__FILE__) . 'admin/g2c-admin.php';
    LOGGER
 ========================= */
 function g2c_log($msg, $data = null) {
+    return;
     $file = WP_CONTENT_DIR . '/g2c.log';
 
     if ($data !== null) {
         $msg .= ' => ' . print_r($data, true);
     }
 
-    error_log('[G2C] ' . $msg);
+    //error_log('[G2C] ' . $msg);
     file_put_contents($file, date('Y-m-d H:i:s') . ' ' . $msg . PHP_EOL, FILE_APPEND);
 }
 

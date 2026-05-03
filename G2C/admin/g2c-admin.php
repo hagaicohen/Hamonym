@@ -1,7 +1,7 @@
 <?php
 
 add_action('admin_footer', function() {
-    echo "<script>console.log('🔥 ADMIN FILE LOADED');</script>";
+    //echo "<script>console.log('🔥 ADMIN FILE LOADED');</script>";
 });
 
 if ( ! defined( 'ABSPATH' ) ) exit;
@@ -131,7 +131,7 @@ add_action('gform_form_settings_page_g2c', function() {
                     <div class="g2c-field"><label>שם פרטי</label><?php g2c_select('first_name', $form_id, $settings); ?></div>
                     <div class="g2c-field"><label>שם משפחה</label><?php g2c_select('last_name', $form_id, $settings); ?></div>
                     <div class="g2c-field"><label>Comments</label><?php g2c_select('comments', $form_id, $settings); ?></div>
-                    <div class="g2c-field"><label>Campaign ID</label><?php g2c_select('campaign_id', $form_id, $settings); ?></div>
+                    <div class="g2c-field"><label>שם קמפיין</label><?php g2c_select('campaign_id', $form_id, $settings); ?></div>
                     <div class="g2c-field"><label>טלפון</label><?php g2c_select('phone', $form_id, $settings); ?></div>
                     <div class="g2c-field"><label>אימייל</label><?php g2c_select('email', $form_id, $settings); ?></div>
                     <div class="g2c-field"><label>כתובת</label><?php g2c_select('address', $form_id, $settings); ?></div>
