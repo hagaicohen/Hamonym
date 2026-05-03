@@ -1,7 +1,40 @@
 <?php
 
 add_action('admin_footer', function() {
-    //echo "<script>console.log('🔥 ADMIN FILE LOADED');</script>";
+?>
+<script>
+jQuery(function($){
+
+    // 🔥 פתיחה / סגירה
+    $(document).on('click', '.g2c-display', function(e){
+        e.stopPropagation();
+
+        $('.g2c-options').hide(); // סגור אחרים
+        $(this).next('.g2c-options').toggle();
+    });
+
+    // 🔥 בחירה
+    $(document).on('click', '.g2c-option', function(e){
+        e.stopPropagation();
+
+        const val   = $(this).data('val');
+        const label = $(this).text();
+
+        const wrapper = $(this).closest('.g2c-dd');
+
+        wrapper.find('.g2c-val').val(val);
+        wrapper.find('.g2c-display').text(label);
+        wrapper.find('.g2c-options').hide();
+    });
+
+    // 🔥 סגירה בלחיצה בחוץ
+    $(document).on('click', function(){
+        $('.g2c-options').hide();
+    });
+
+});
+</script>
+<?php
 });
 
 if ( ! defined( 'ABSPATH' ) ) exit;

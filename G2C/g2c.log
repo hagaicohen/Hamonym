@@ -1,0 +1,205 @@
+2026-05-03 08:07:30 📞 PHONE FOR CC => Array
+(
+    [field_id] => 34
+    [value] => 0526706744
+)
+
+2026-05-03 08:07:30 PRODUCT MAPPED => Array
+(
+    [product_id] => 151
+    [title] => תמיכה בסכום חופשי לבחירתכם (רשות)
+    [price] => 1
+    [qty] => 1
+)
+
+2026-05-03 08:07:30 🚀 FINAL PAYLOAD => Array
+(
+    [TerminalNumber] => 182236
+    [ApiName] => i5XQ*************m2X
+    [ApiPassword] => ****
+    [Amount] => 1
+    [SuccessRedirectUrl] => https://hamonym1stg.wpenginepowered.com/campaign-payment-success/yom-kippur/
+    [FailedRedirectUrl] => https://hamonym1stg.wpenginepowered.com/campaign-payment-fail/
+    [ReturnValue] => 115436
+    [Email] => hagai.cohen@gmail.com
+    [Document] => Array
+        (
+            [To] => עופר ינאי
+            [Email] => hagai.cohen@gmail.com
+            [Phone] => 0526706744
+            [Mobile] => 0526706744
+            [Products] => Array
+                (
+                    [0] => Array
+                        (
+                            [Description] => תמיכה בסכום חופשי לבחירתכם (רשות)
+                            [UnitCost] => 1
+                        )
+
+                )
+
+        )
+
+)
+
+2026-05-03 08:07:30 📥 CARDCOM RESPONSE => Array
+(
+    [ResponseCode] => 0
+    [Description] => OK
+    [LowProfileId] => 8af82d76-48f8-431e-adff-2b869b2a8539
+    [Url] => https://secure.cardcom.solutions/EA/LPC6/182236/8af82d76-48f8-431e-adff-2b869b2a8539?t=24
+    [UrlToPayPal] => 
+    [UrlToBit] => 
+)
+
+2026-05-03 08:07:46 📞 PHONE FROM SETTINGS => Array
+(
+    [field_id] => 34
+    [value] => 0526706744
+)
+
+2026-05-03 08:07:46 🚀POST BEFORE HOOK => Array
+(
+    [ResponseCode] => 0
+    [Response] => 000
+    [TransactionId] => 246775472
+    [Amount] => 1
+    [Currency] => 1
+    [sum] => 1
+    [index] => 8af82d76-48f8-431e-adff-2b869b2a8539
+    [first_name] => עופר
+    [last_name] => ינאי
+    [full_name] => עופר ינאי
+    [email] => hagai.cohen@gmail.com
+    [city] => נחושה
+    [contact] => עופר ינאי
+    [phone] => 0526706744
+    [date] => 2026-05-03T08:07:46+00:00
+)
+
+2026-05-03 08:07:46 FINAL POST SENT TO HOOK => Array
+(
+    [ResponseCode] => 0
+    [Response] => 000
+    [TransactionId] => 246775472
+    [Amount] => 1
+    [Currency] => 1
+    [sum] => 1
+    [index] => 8af82d76-48f8-431e-adff-2b869b2a8539
+    [first_name] => עופר
+    [last_name] => ינאי
+    [full_name] => עופר ינאי
+    [email] => hagai.cohen@gmail.com
+    [city] => נחושה
+    [contact] => עופר ינאי
+    [phone] => 0526706744
+    [date] => 2026-05-03T08:07:46+00:00
+)
+
+2026-05-03 08:07:46 HOOK FIRED SUCCESS
+2026-05-03 08:10:28 📞 PHONE FOR CC => Array
+(
+    [field_id] => 34
+    [value] => 0526706744
+)
+
+2026-05-03 08:10:28 PRODUCT MAPPED => Array
+(
+    [product_id] => 151
+    [title] => תמיכה בסכום חופשי לבחירתכם (רשות)
+    [price] => 1
+    [qty] => 1
+)
+
+2026-05-03 08:10:28 🚀 FINAL PAYLOAD => Array
+(
+    [TerminalNumber] => 182236
+    [ApiName] => i5XQ*************m2X
+    [ApiPassword] => ****
+    [Amount] => 1
+    [SuccessRedirectUrl] => https://hamonym1stg.wpenginepowered.com/campaign-payment-success/yom-kippur/
+    [FailedRedirectUrl] => https://hamonym1stg.wpenginepowered.com/campaign-payment-fail/
+    [ReturnValue] => 115437
+    [Email] => hagai.cohen@gmail.com
+    [CustomerEmail] => hagai.cohen@gmail.com
+    [ContactEmail] => hagai.cohen@gmail.com
+    [UserEmail] => hagai.cohen@gmail.com
+    [ClientEmail] => hagai.cohen@gmail.com
+    [BillingEmail] => hagai.cohen@gmail.com
+    [Document] => Array
+        (
+            [To] => גברי דשן
+            [Email] => hagai.cohen@gmail.com
+            [Phone] => 0526706744
+            [Mobile] => 0526706744
+            [CustomerEmail] => hagai.cohen@gmail.com
+            [ContactEmail] => hagai.cohen@gmail.com
+            [Products] => Array
+                (
+                    [0] => Array
+                        (
+                            [Description] => תמיכה בסכום חופשי לבחירתכם (רשות)
+                            [UnitCost] => 1
+                        )
+
+                )
+
+        )
+
+)
+
+2026-05-03 08:10:28 📥 CARDCOM RESPONSE => Array
+(
+    [ResponseCode] => 0
+    [Description] => OK
+    [LowProfileId] => f76aa3ef-1543-4c4c-98ab-95ef996d392c
+    [Url] => https://secure.cardcom.solutions/EA/LPC6/182236/f76aa3ef-1543-4c4c-98ab-95ef996d392c?t=24
+    [UrlToPayPal] => 
+    [UrlToBit] => 
+)
+
+2026-05-03 08:10:45 📞 PHONE FROM SETTINGS => Array
+(
+    [field_id] => 34
+    [value] => 0526706744
+)
+
+2026-05-03 08:10:45 🚀POST BEFORE HOOK => Array
+(
+    [ResponseCode] => 0
+    [Response] => 000
+    [TransactionId] => 246776081
+    [Amount] => 1
+    [Currency] => 1
+    [sum] => 1
+    [index] => f76aa3ef-1543-4c4c-98ab-95ef996d392c
+    [first_name] => גברי
+    [last_name] => דשן
+    [full_name] => גברי דשן
+    [email] => hagai.cohen@gmail.com
+    [city] => נחושה
+    [contact] => גברי דשן
+    [phone] => 0526706744
+    [date] => 2026-05-03T08:10:45+00:00
+)
+
+2026-05-03 08:10:45 FINAL POST SENT TO HOOK => Array
+(
+    [ResponseCode] => 0
+    [Response] => 000
+    [TransactionId] => 246776081
+    [Amount] => 1
+    [Currency] => 1
+    [sum] => 1
+    [index] => f76aa3ef-1543-4c4c-98ab-95ef996d392c
+    [first_name] => גברי
+    [last_name] => דשן
+    [full_name] => גברי דשן
+    [email] => hagai.cohen@gmail.com
+    [city] => נחושה
+    [contact] => גברי דשן
+    [phone] => 0526706744
+    [date] => 2026-05-03T08:10:45+00:00
+)
+
+2026-05-03 08:10:45 HOOK FIRED SUCCESS
